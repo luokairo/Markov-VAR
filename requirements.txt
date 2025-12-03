@@ -1,0 +1,9 @@
+typed-argument-parser
+pandas
+timm==0.9.6
+transformers
+torch==2.5.1
+imageio
+einops
+numpy
+pytz
