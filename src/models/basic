@@ -1,0 +1,200 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import functools
+import math
+from typing import Tuple, Union
+
+try:
+    from flash_attn import flash_attn_func
+    FLASH_ATTN_AVAILABLE = True
+except ImportError:
+    FLASH_ATTN_AVAILABLE = False
+    print("Warning: flash_attn not available, falling back to standard attention")
+
+
+class RMSNorm(torch.nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-5):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim))
+
+    def _norm(self, x):
+        return x * torch.rsqrt(torch.mean(x * x, dim=-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
+
+class LlamaAttention(nn.Module):
+    def __init__(self, dim: int, n_heads: int, n_kv_heads: int = None, qkv_proj_bias: bool = False, out_proj_bias: bool = False, use_flash_attn: bool = True):
+        super().__init__()
+        self.dim = dim
+        self.n_heads = n_heads
+        self.n_kv_heads = n_kv_heads if n_kv_heads is not None else n_heads
+        self.n_rep = self.n_heads // self.n_kv_heads
+        self.head_dim = dim // n_heads
+        self.use_flash_attn = use_flash_attn and FLASH_ATTN_AVAILABLE
+        
+        self.q_proj = nn.Linear(dim, n_heads * self.head_dim, bias=qkv_proj_bias)
+        self.k_proj = nn.Linear(dim, self.n_kv_heads * self.head_dim, bias=qkv_proj_bias)
+        self.v_proj = nn.Linear(dim, self.n_kv_heads * self.head_dim, bias=qkv_proj_bias)
+        self.out_proj = nn.Linear(n_heads * self.head_dim, dim, bias=out_proj_bias)
+        
+    def forward(self, x: torch.Tensor, freqs_cis: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
+        bsz, seqlen, _ = x.shape
+        
+        q = self.q_proj(x)
+        k = self.k_proj(x)
+        v = self.v_proj(x)
+        
+        q = q.view(bsz, seqlen, self.n_heads, self.head_dim)
+        k = k.view(bsz, seqlen, self.n_kv_heads, self.head_dim)
+        v = v.view(bsz, seqlen, self.n_kv_heads, self.head_dim)
+        
+        q = apply_rotary_emb(q, freqs_cis)
+        k = apply_rotary_emb(k, freqs_cis)
+
+        k = k.repeat_interleave(self.n_rep, dim=2)
+        v = v.repeat_interleave(self.n_rep, dim=2)
+        
+        if self.use_flash_attn:
+            attn_output = flash_attn_func(
+                q, k, v,
+                dropout_p=0.0,
+                softmax_scale=1.0 / math.sqrt(self.head_dim),
+                causal=True
+            )
+            attn_output = attn_output.reshape(bsz, seqlen, -1)
+        else:
+            q = q.transpose(1, 2)
+            k = k.transpose(1, 2)
+            v = v.transpose(1, 2)
+
+            scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.head_dim)
+            
+            if mask is not None:
+                scores = scores + mask
+            
+            attn_weights = F.softmax(scores, dim=-1, dtype=torch.float32).to(q.dtype)
+
+            attn_output = torch.matmul(attn_weights, v)
+            
+            attn_output = attn_output.transpose(1, 2).contiguous()
+            
+            attn_output = attn_output.reshape(bsz, seqlen, -1)
+        
+        return self.out_proj(attn_output)
+
+
+def apply_rotary_emb(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
+    x_ = x.float().reshape(*x.shape[:-1], -1, 2)
+    freqs_cis = freqs_cis.unsqueeze(0).unsqueeze(0)
+    x_ = torch.view_as_complex(x_)
+    freqs_cis = torch.view_as_complex(freqs_cis)
+    x_out = torch.view_as_real(x_ * freqs_cis).flatten(3)
+    return x_out.type_as(x)
+
+
+def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0) -> torch.Tensor:
+    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[:(dim // 2)].float() / dim))
+    t = torch.arange(end, device=freqs.device)
+    freqs = torch.outer(t, freqs).float()
+    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)
+    return freqs_cis
+
+
+class LlamaMLP(nn.Module):
+    def __init__(self, dim: int, hidden_dim: int, multiple_of: int = 256):
+        super().__init__()
+        hidden_dim = int(2 * hidden_dim / 3)
+        hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
+        
+        self.gate_proj = nn.Linear(dim, hidden_dim, bias=False)
+        self.up_proj = nn.Linear(dim, hidden_dim, bias=False)
+        self.down_proj = nn.Linear(hidden_dim, dim, bias=False)
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.down_proj(F.silu(self.gate_proj(x)) * self.up_proj(x))
+
+
+class LlamaBlock(nn.Module):
+    def __init__(self, dim: int, n_heads: int, n_kv_heads: int = None, mlp_hidden_dim: int = None, norm_eps: float = 1e-5, use_flash_attn: bool = True):
+        super().__init__()
+        self.attention = LlamaAttention(dim, n_heads, n_kv_heads, use_flash_attn=use_flash_attn)
+        self.feed_forward = LlamaMLP(dim, mlp_hidden_dim or 4 * dim)
+        self.attention_norm = RMSNorm(dim, eps=norm_eps)
+        self.ffn_norm = RMSNorm(dim, eps=norm_eps)
+        
+    def forward(self, x: torch.Tensor, freqs_cis: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
+        norm_x = self.attention_norm(x)
+        h = x + self.attention(norm_x, freqs_cis, mask)
+        
+        norm_h = self.ffn_norm(h)
+        out = h + self.feed_forward(norm_h)
+        
+        return out
+
+
+class LlamaModel(nn.Module):
+    def __init__(self, vocab_size: int, dim: int, n_layers: int, n_heads: int, 
+                 n_kv_heads: int = None, mlp_hidden_dim: int = None, 
+                 max_seq_len: int = 2048, norm_eps: float = 1e-5, use_flash_attn: bool = True):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.dim = dim
+        self.n_layers = n_layers
+        self.n_heads = n_heads
+        self.n_kv_heads = n_kv_heads
+        self.max_seq_len = max_seq_len
+        self.use_flash_attn = use_flash_attn
+        
+        self.tok_embeddings = nn.Embedding(vocab_size, dim)
+        
+        self.layers = nn.ModuleList([
+            LlamaBlock(dim, n_heads, n_kv_heads, mlp_hidden_dim, norm_eps, use_flash_attn)
+            for _ in range(n_layers)
+        ])
+        
+        self.norm = RMSNorm(dim, eps=norm_eps)
+        
+        self.output = nn.Linear(dim, vocab_size, bias=False)
+        
+        self.register_buffer('freqs_cis', precompute_freqs_cis(dim, max_seq_len))
+        
+    def forward(self, tokens: torch.Tensor, start_pos: int = 0) -> torch.Tensor:
+        _bsz, seqlen = tokens.shape
+        h = self.tok_embeddings(tokens)
+        
+        freqs_cis = self.freqs_cis[start_pos:start_pos + seqlen]
+        
+        mask = None
+        if seqlen > 1:
+            mask = torch.full((seqlen, seqlen), float('-inf'), device=tokens.device)
+            mask = torch.triu(mask, diagonal=1)
+            mask = mask.unsqueeze(0).unsqueeze(0)  # (1, 1, seqlen, seqlen)
+        
+        for layer in self.layers:
+            h = layer(h, freqs_cis, mask)
+        
+        h = self.norm(h)
+        
+        logits = self.output(h)
+        
+        return logits
+
+
+def get_model_size(model: LlamaModel) -> dict:
+
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    param_size = sum(p.numel() * p.element_size() for p in model.parameters()) / (1024 * 1024)
+    
+    return {
+        'total_parameters': total_params,
+        'trainable_parameters': trainable_params,
+        'parameter_size_mb': param_size,
+        'use_flash_attn': model.use_flash_attn,
+        'flash_attn_available': FLASH_ATTN_AVAILABLE
+    }
