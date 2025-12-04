@@ -28,3 +28,14 @@
 ## Installation
  <p align="center">:construction: :pick: :hammer_and_wrench: :construction_worker:</p>
  <p align="center">Under construction. </p>
+
+## Citation
+
+```bibtex
+@article{zhang2025markovian,
+  title={Markovian Scale Prediction: A New Era of Visual Autoregressive Generation},
+  author={Zhang, Yu and Liu, Jingyi and Shi, Yiwei and Zhang, Qi and Miao, Duoqian and Wang, Changwei and Cao, Longbing},
+  journal={arXiv preprint arXiv:2511.23334},
+  year={2025}
+}
+```
