@@ -10,6 +10,9 @@
     </a>&nbsp;
     <a href="https://luokairo.github.io/markov-var-page/">
         <img src="https://img.shields.io/badge/Github-Project_Page-blue" alt="Project Page" />
+    </a>&nbsp;
+    <a href="https://huggingface.co/kairoliu/Markov-VAR">
+        <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Markovar/model-yellow" alt="huggingface weights" />
     </a>
 </div>
 
