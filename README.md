@@ -42,3 +42,6 @@
   year={2025}
 }
 ```
+
+---
+:star: If Markov-VAR is helpful to your projects, please help star this repo. Thanks! :hugs:
