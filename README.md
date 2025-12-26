@@ -7,10 +7,10 @@
 <div align="center">
     <a href="https://arxiv.org/pdf/2511.23334">
         <img src="https://img.shields.io/badge/ArXiv-2511.23334-b31b1b.svg" alt="ArXiv" />
-    </a>&nbsp;
+    </a>
     <a href="https://luokairo.github.io/markov-var-page/">
         <img src="https://img.shields.io/badge/Github-Project_Page-blue" alt="Project Page" />
-    </a>&nbsp;
+    </a>
     <a href="https://huggingface.co/kairoliu/Markov-VAR">
         <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Markovar/model-yellow" alt="huggingface weights" />
     </a>
