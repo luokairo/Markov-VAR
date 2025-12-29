@@ -26,12 +26,29 @@
 
 ## News
 
-- [2025-11] We release the pretrained **Markov-VAR** weights on [Hugging Face](chatgpt://generic-entity?number=0):  
-  https://huggingface.co/kairoliu/Markov-VAR
+- [2025-12] We release the pretrained **Markov-VAR** weights on 
+  [Hugging Face](https://huggingface.co/kairoliu/Markov-VAR).
 - [2025-11] We open-source the code for **Markov-VAR**.
 - [2025-11] The paper is now available on arXiv!
 
+## Abstract
+
+Visual AutoRegressive modeling (VAR) based on next-scale prediction has revitalized autoregressive visual generation. Although its full-context dependency, i.e., modeling all previous scales for next-scale prediction, facilitates more stable and comprehensive representation learning by leveraging complete information flow, the resulting computational inefficiency and substantial overhead severely hinder VAR's practicality and scalability. This motivates us to develop a new VAR model with better performance and efficiency without full-context dependency. To address this, we reformulate VAR as a non-full-context Markov process, proposing Markov-VAR. It is achieved via Markovian Scale Prediction: we treat each scale as a Markov state and introduce a sliding window that compresses certain previous scales into a compact history vector to compensate for historical information loss owing to non-full-context dependency. Integrating the history vector with the Markov state yields a representative dynamic state that evolves under a Markov process.  Extensive experiments demonstrate that Markov-VAR is extremely simple yet highly effective: Compared to VAR on ImageNet, Markov-VAR reduces FID by 10.5\% (256×256) and decreases peak memory consumption by 83.8\% (1024×1024). We believe that Markov-VAR can serve as a foundation for future research on visual autoregressive generation and other downstream tasks.
+
 ## Installation
+
+Download the repo:
+
+```bash
+git clone https://github.com/luokairo/Markov-VAR.git
+cd Markov-VAR
+conda create -n markov python=3.10
+conda activate markov
+conda install -c nvidia cuda-toolkit -y
+```
+
+### Command Line Inference
+
  <p align="center">:construction: :pick: :hammer_and_wrench: :construction_worker:</p>
  <p align="center">Under construction. </p>
 
