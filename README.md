@@ -26,6 +26,9 @@
 
 ## News
 
+- [2025-11] We release the pretrained **Markov-VAR** weights on [Hugging Face](chatgpt://generic-entity?number=0):  
+  https://huggingface.co/kairoliu/Markov-VAR
+- [2025-11] We open-source the code for **Markov-VAR**.
 - [2025-11] The paper is now available on arXiv!
 
 ## Installation
