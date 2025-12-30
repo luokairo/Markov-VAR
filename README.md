@@ -5,14 +5,14 @@
 </div>
 
 <div align="center">
-    <a href="https://arxiv.org/pdf/2511.23334" style="text-decoration:none; margin: 0 4px;">
-        <img src="https://img.shields.io/badge/ArXiv-2511.23334-b31b1b.svg" alt="ArXiv" />
+    <a href="https://arxiv.org/pdf/2511.23334" style="display:inline-block;">
+        <img src="https://img.shields.io/badge/ArXiv-2511.23334-b31b1b.svg" />
     </a>
-    <a href="https://luokairo.github.io/markov-var-page/" style="text-decoration:none; margin: 0 4px;">
-        <img src="https://img.shields.io/badge/Github-Project_Page-blue" alt="Project Page" />
+    <a href="https://luokairo.github.io/markov-var-page/" style="display:inline-block;">
+        <img src="https://img.shields.io/badge/Github-Project_Page-blue" />
     </a>
-    <a href="https://huggingface.co/kairoliu/Markov-VAR" style="text-decoration:none; margin: 0 4px;">
-        <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Markovar/model-yellow" alt="huggingface weights" />
+    <a href="https://huggingface.co/kairoliu/Markov-VAR" style="display:inline-block;">
+        <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Markovar/model-yellow" />
     </a>
 </div>
 
