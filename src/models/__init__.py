@@ -39,7 +39,7 @@ def get_model_config(name: str, **kwargs):
         raise ValueError(f"Unknown model name: {name}")
     return MODEL_REGISTRY[name](**kwargs)
 
-def build_vae_var(
+def build_vae_markovvar(
     # Shared args
     device, patch_nums=(1, 2, 3, 4, 5, 6, 8, 10, 13, 16),   # 10 steps by default
     # VQVAE args
