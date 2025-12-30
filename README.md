@@ -5,9 +5,11 @@
 </div>
 
 <div align="center">
-    [![arXiv](https://img.shields.io/badge/arXiv%20paper-2511.23334-b31b1b.svg)](https://arxiv.org/abs/2511.23334)&nbsp;
-    [![GitHub Project Page](https://img.shields.io/badge/GitHub-Project%20Page-blue)](https://luokairo.github.io/markov-var-page/)&nbsp;
-    [![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-kairoliu/Markov--VAR-yellow)](https://huggingface.co/kairoliu/Markov-VAR)
+    
+[![arxiv](https://img.shields.io/badge/ArXiv-2511.23334-b31b1b.svg)](https://arxiv.org/pdf/2511.2333)&nbsp;
+[![Project Page](https://img.shields.io/badge/Github-Project_Page-blue)](https://luokairo.github.io/markov-var-page/)&nbsp;
+[![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Markovar/model-yellow)]("https://huggingface.co/kairoliu/Markov-VAR)&nbsp;
+
 </div>
 
 <div align="center">
