@@ -1,6 +1,6 @@
 <div align="center">
     <h1> 
-        Markovian Scale Prediction: A New Era of Visual Autoregressive Generation
+        Markovian Scale Prediction: A New Era of Visual Autoregressive Generation (CVPR2026)
     </h1>
 </div>
 
@@ -26,6 +26,7 @@
   [Hugging Face](https://huggingface.co/kairoliu/Markov-VAR).
 - [2025-11] We open-source the code for **Markov-VAR**.
 - [2025-11] The paper is now available on arXiv!
+- [2026-2] Markov-VAR is accepted in CVPR2026 🎉!
 
 ## Abstract
 
