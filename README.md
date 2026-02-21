@@ -22,11 +22,11 @@
 
 ## News
 
+- [2026-02] 🎉 Markov-VAR is accepted by CVPR2026!
 - [2025-12] 🤗 We release the pretrained **Markov-VAR** weights on 
   [Hugging Face](https://huggingface.co/kairoliu/Markov-VAR).
 - [2025-11] 🔥 We open-source the code for **Markov-VAR**.
 - [2025-11] 📑 The paper is now available on arXiv!
-- [2026-02] 🎉 Markov-VAR is accepted by CVPR2026!
 
 ## Abstract
 
